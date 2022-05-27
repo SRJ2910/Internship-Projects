@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:the_goodnews_hub/videoplayer.dart';
 import 'package:video_player/video_player.dart';
 
 class myHomePage extends StatefulWidget {
@@ -14,19 +15,12 @@ class myHomePage extends StatefulWidget {
 }
 
 class _myHomePageState extends State<myHomePage> {
-  List _items = [];
-  late VideoPlayerController _controller;
-  late Future<void> _initializeVideoPlayerFuture;
+  List _videoFile = [];
+  List _videoDescription = [];
+  List _videoTitle = [];
 
-  @override
-  void initState() {
-    _controller = VideoPlayerController.network(
-        "https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4");
-    _initializeVideoPlayerFuture = _controller.initialize();
-    _controller.setLooping(true);
-    _controller.setVolume(1.0);
-    super.initState();
-  }
+  final ScrollController _controller = ScrollController();
+  int i = 1;
 
   @override
   void dispose() {
@@ -34,100 +28,116 @@ class _myHomePageState extends State<myHomePage> {
     super.dispose();
   }
 
-  // Fetch content from the json file
+  @override
+  Widget build(BuildContext context) {
+    print(_videoFile);
+    print(i);
+    return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          shadowColor: Colors.white,
+          elevation: 20,
+          title: Row(
+            children: [
+              Icon(Icons.personal_video),
+              SizedBox(
+                width: 20,
+              ),
+              Title(color: Colors.white, child: Text("News Flash")),
+            ],
+          ),
+        ),
+        body: _videoFile.isEmpty
+            ? Container(
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        readJson();
+                      },
+                      icon: Icon(Icons.refresh),
+                      color: Colors.white,
+                      iconSize: 40,
+                    ),
+                    Text(
+                      "Tap to view exclusive headline",
+                      style: TextStyle(color: Colors.white),
+                    )
+                  ],
+                ),
+              )
+            : ListView.builder(
+                controller: _controller,
+                itemCount: _videoFile.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return videobox(index);
+                },
+              ),
+        floatingActionButton:
+            // FloatingActionButton(
+            //   child: Icon(Icons.arrow_downward),
+            //   onPressed: () => _animateToIndex(i),
+            // ),
+            GestureDetector(
+          child: Container(
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey)),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20),
+              child: Text(
+                "Next",
+                style: TextStyle(color: Colors.grey, fontSize: 20),
+              ),
+            ),
+          ),
+          onTap: () {
+            _animateToIndex(i);
+          },
+        ));
+  }
+
   Future<void> readJson() async {
     final String response =
         await rootBundle.loadString('resource/sampleVideo.json');
     final data = await json.decode(response);
+    final exp = List.generate(
+      data.length,
+      (int index) => (data[index]["sources"]),
+    );
+    final exp1 = List.generate(
+      data.length,
+      (int index) => (data[index]["description"]),
+    );
+    final exp2 = List.generate(
+      data.length,
+      (int index) => (data[index]["title"]),
+    );
     setState(() {
-      _items = data["videos"];
+      _videoFile = exp;
+      _videoDescription = exp1;
+      _videoTitle = exp2;
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    print(_items);
-    // readJson();
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Icon(Icons.personal_video),
-            SizedBox(
-              width: 20,
-            ),
-            Title(color: Colors.white, child: Text("News Flash")),
-          ],
-        ),
-      ),
-      body: _items.isEmpty
-          ? Container(
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                      onPressed: () {
-                        readJson();
-                      },
-                      icon: Icon(Icons.refresh)),
-                  Text("Tap to Refresh")
-                ],
-              ),
-            )
-          : ListView.builder(
-              itemCount: 20,
-              itemBuilder: (BuildContext context, int index) {
-                return videobox(index);
-              },
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            if (_controller.value.isPlaying) {
-              _controller.pause();
-            } else {
-              _controller.play();
-            }
-          });
-        },
-        child:
-            Icon(_controller.value.isPlaying ? Icons.pause : Icons.play_arrow),
-      ),
+  videobox(index) {
+    return videoPlayer(
+      _videoFile[index],
+      _videoDescription[index],
+      _videoTitle[index],
     );
   }
 
-  videobox(index) {
-    // return ListTile(
-    //     leading: Text(_items[index]["title"]),
-    //     title: Vcontroller != null
-    //         ? Container(
-    //             child: VideoPlayer(Vcontroller),
-    //           )
-    //         : Container(
-    //             child: CircularProgressIndicator(),
-    //           ));
-    return FutureBuilder(
-      future: _initializeVideoPlayerFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          return Center(
-            child: AspectRatio(
-              aspectRatio: _controller.value.aspectRatio,
-              child: Stack(
-                children: [
-                  VideoPlayer(_controller),
-                  VideoProgressIndicator(_controller, allowScrubbing: true),
-                ],
-              ),
-            ),
-          );
-        } else {
-          return Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-      },
+  void _animateToIndex(int ip) {
+    _controller.animateTo(
+      MediaQuery.of(context).size.height * (ip % _videoFile.length),
+      duration: Duration(seconds: 2),
+      curve: Curves.fastOutSlowIn,
     );
+    setState(() {
+      i = ip + 1;
+    });
   }
 }
