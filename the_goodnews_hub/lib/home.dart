@@ -62,7 +62,7 @@ class _myHomePageState extends State<myHomePage> {
                       iconSize: 40,
                     ),
                     Text(
-                      "Tap to view exclusive headline",
+                      "Tap to view exclusive headlines",
                       style: TextStyle(color: Colors.white),
                     )
                   ],
