@@ -1,5 +1,6 @@
+// ignore_for_file: prefer_const_constructors, camel_case_types, prefer_const_constructors_in_immutables
+
 import 'package:flutter/material.dart';
-import 'package:the_goodnews_hub/home.dart';
 import 'package:video_player/video_player.dart';
 
 class videoPlayer extends StatefulWidget {
@@ -37,7 +38,7 @@ class _videoPlayerState extends State<videoPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       key: widget.key,
       height: MediaQuery.of(context).size.height,
       child: Center(
@@ -121,7 +122,7 @@ class _videoPlayerState extends State<videoPlayer> {
                 },
               ),
               Text(
-                "Description : " + widget.description,
+                "Description : ${widget.description}",
                 style: TextStyle(color: Colors.grey),
               ),
             ],
